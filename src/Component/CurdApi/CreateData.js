@@ -1,35 +1,45 @@
 import { useState } from "react";
-// import { toast } from "react-toastify";
 import showToastMessage from "./Toastify";
 import Layout from "./Layout";
 
 const CreateData=()=>{
     const initialValues = {name:"",email:"",phone:"",message:""};
     const [formValues, setFormValues] = useState(initialValues);
+    const [image, setImage] = useState(null);
 
     const changeFormHandle=(e)=>{
-        const { name, value } = e.target;
-        setFormValues({...formValues, [name]:value});
-        // console.log(formValues);
+        const { name, value } = e.target;        
+            setFormValues({...formValues, [name]:value});
+            console.log(formValues);
+    }
+    const changeFileHandle=(e)=>{
+        setImage(e.target.files[0]);
+        console.log(e.target.files[0]);
     }
     const submitFormHandle=(e)=>{
         e.preventDefault();
         PostApiFormData();        
     }
-    const PostApiFormData=()=>{
-        fetch("http://127.0.0.1:8000/api/data-list-store",{
-            method:"POST",
-            headers:{
-                'Accept':'application/json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(formValues)
-        }).then((result)=>{
-            result.json().then((response)=>{
+    const PostApiFormData=async()=>{
+        // const formData = formValues();
+        //formData.append('file', image.file);
+        const Data = new FormData();
+        Data.append('name', formValues.name);
+        Data.append('email', formValues.email);
+        Data.append('phone', formValues.phone);
+        Data.append('message', formValues.message);
+        Data.append('file', image);
+        console.log(Data);
+        await fetch("http://127.0.0.1:8000/api/data-list-store",{
+            method:"POST",            
+            body: Data
+        }).then((data)=>{
+            data.json().then((response)=>{
                 console.log(response);
-                showToastMessage(response.message, "success");
-                showToastMessage(response.error, "error");
                 setFormValues(initialValues);
+                setImage("");
+                showToastMessage(response?.message, "success");
+                showToastMessage(response?.error, "error");
             })
         });
     }    
@@ -51,11 +61,15 @@ const CreateData=()=>{
                     <label className="form-label">Phone</label>
                     <input type="text" className="form-control" name="phone" onChange={changeFormHandle}
                         value={formValues.phone} placeholder="Enter Phone No."/>
-                </div>
+                </div>                
                 <div className="mb-3">
                     <label className="form-label">Message</label>
                     <textarea className="form-control" rows="3" column="10" name="message" onChange={changeFormHandle}
                         value={formValues.message} placeholder="Enter Message"></textarea>
+                </div>
+                <div className="mb-3">
+                    <label className="form-label">Upload Document</label>
+                    <input type="file" className="form-control" name="file" onChange={changeFileHandle}/>
                 </div>
                 <div className="mb-3">
                     <button className="btn btn-primary" type="submit">Submit</button>
